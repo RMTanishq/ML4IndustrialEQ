@@ -1,0 +1,1543 @@
+
+  Damage Calculations
+
+From Azur Lane Wiki
+Jump to navigation <#mw-head> Jump to search <#searchInput>
+
+
+Contents
+
+  * 1 Damage Types <#Damage_Types>
+  * 2 Projectile Types <#Projectile_Types>
+  * 3 Ammo Types <#Ammo_Types>
+  * 4 Armor Modifiers <#Armor_Modifiers>
+  * 5 Stat Modifiers <#Stat_Modifiers>
+      o 5.1 Flat Stat Modifiers <#Flat_Stat_Modifiers>
+      o 5.2 Percentage Stat Modifiers <#Percentage_Stat_Modifiers>
+      o 5.3 Misc. Skill Flat Stat Buffs <#Misc._Skill_Flat_Stat_Buffs>
+      o 5.4 Final Effective Stat <#Final_Effective_Stat>
+          + 5.4.1 CurrentStat <#CurrentStat>
+          + 5.4.2 StatMultiplier <#StatMultiplier>
+  * 6 Universal Modifiers <#Universal_Modifiers>
+      o 6.1 DamageRatioBullet <#DamageRatioBullet>
+      o 6.2 InjureRatio <#InjureRatio>
+  * 7 Weapon Type Modifiers <#Weapon_Type_Modifiers>
+      o 7.1 DamageRatioByType <#DamageRatioByType>
+      o 7.2 InjureRatioByType <#InjureRatioByType>
+      o 7.3 Armor Break <#Armor_Break>
+      o 7.4 Total Modifier <#Total_Modifier>
+  * 8 Hunter Modifiers <#Hunter_Modifiers>
+  * 9 Critical Hits <#Critical_Hits>
+      o 9.1 Critical Rate <#Critical_Rate>
+      o 9.2 Critical Damage <#Critical_Damage>
+  * 10 Aimed Shot (Manual) Modifiers <#Aimed_Shot_(Manual)_Modifiers>
+  * 11 Level Advantage <#Level_Advantage>
+  * 12 Threat Level <#Threat_Level>
+  * 13 Air Damage Reduction <#Air_Damage_Reduction>
+  * 14 Final Damage Dealt <#Final_Damage_Dealt>
+      o 14.1 Guns / Torpedoes <#Guns_/_Torpedoes>
+      o 14.2 Aircraft Ordnance <#Aircraft_Ordnance>
+  * 15 Weapon Reload <#Weapon_Reload>
+      o 15.1 Guns / Torpedoes <#Guns_/_Torpedoes_2>
+      o 15.2 Airstrike <#Airstrike>
+  * 16 Anti-Air Guns <#Anti-Air_Guns>
+      o 16.1 Default AA Guns <#Default_AA_Guns>
+      o 16.2 Ghost AA Guns <#Ghost_AA_Guns>
+      o 16.3 Time Fuze AA Guns <#Time_Fuze_AA_Guns>
+      o 16.4 AA Damage <#AA_Damage>
+      o 16.5 AA Reload <#AA_Reload>
+      o 16.6 AA Range <#AA_Range>
+  * 17 Anti-Submarine Warfare <#Anti-Submarine_Warfare>
+  * 18 Collision Damage <#Collision_Damage>
+      o 18.1 Ramming <#Ramming>
+      o 18.2 Enemy Surface Ship to Allied Main Fleet
+        <#Enemy_Surface_Ship_to_Allied_Main_Fleet>
+      o 18.3 Enemy Submarine to Allied Main Fleet
+        <#Enemy_Submarine_to_Allied_Main_Fleet>
+      o 18.4 Aircraft Crash Damage <#Aircraft_Crash_Damage>
+  * 19 Slash Damage <#Slash_Damage>
+      o 19.1 Augment Modules <#Augment_Modules>
+      o 19.2 Ship Skills <#Ship_Skills>
+  * 20 Damage Over Time (DOT) <#Damage_Over_Time_(DOT)>
+      o 20.1 Fire / Burn Damage <#Fire_/_Burn_Damage>
+      o 20.2 Flood Damage <#Flood_Damage>
+  * 21 Weapon Accuracy <#Weapon_Accuracy>
+      o 21.1 Geometric Accuracy <#Geometric_Accuracy>
+      o 21.2 Hit Rate <#Hit_Rate>
+      o 21.3 Effective HP <#Effective_HP>
+
+This page goes over all the formulas and terms used when calculating the
+final damage dealt by attacking ships, and the damage received by target
+ships, in Azur Lane.
+
+This wiki page is very confusing, due to how complicated the code is and
+our ability to clearly explain everything. If there are any errors, feel
+free to give us feedback!
+
+
+*Notes:*
+
+  * Unless otherwise stated, assume that *all decimal values are
+    floored* to the nearest whole number.
+  * This guide is written from the perspective of *"Attacker"* ships
+    dealing damage and *"Target"* ships receiving damage. Unless
+    otherwise stated, Enemy ships or Allied ships can be the attacker or
+    target.
+      o *"Enemy"* and *"Allied"* are used when the effect applies to
+        NPC / Player ships *only*.
+
+
+    Damage Types
+
+Most damage dealt scales with the attacker's offensive stats:
+
+  * *Gun (or Shelling)* - damage dealt by shells/bullets from ship Main
+    Guns and Secondary Guns; scales with FirepowerFP (Firepower).
+  * *Torpedo* - damage dealt by ship Torpedos; scales with TorpedoTRP
+    (Torpedo).
+  * *Anti-Air* - damage dealt by ship Anti-Air mechanics <#Anti-
+    Air_Guns>; scales with Anti-airAA (Anti-Air).
+  * *Aircraft* - damage dealt by aircraft launched from ships; scales
+    with AviationAVI (Aviation).
+      o Includes all aircraft armaments except ASW (ie. aircraft
+        Cannons/Torpedos *still scale with AVI* rather than FP/TRP/AA).
+  * *Anti-Submarine Warfare* - damage dealt by ASW mechanics <#Anti-
+    Submarine_Warfare>; scales with Anti-submarine warfareASW (Anti-
+    Submarine Warfare).
+
+Damage without conventional stat scaling includes:
+
+  * *Burn Damage* - a damage over time (DoT) effect.
+  * *Flood Damage* - a damage over time (DoT) effect.
+  * *Ramming Damage* - dealt when ships collide with one another.
+  * *Collision Damage* - dealt when enemy ships explode upon contact
+    with your fleet.
+
+Barrages are composed of one of more damage types, and may deal fixed
+damage or have unique stat scaling.
+
+  * See this wiki page <https://azurlane.koumakan.jp/wiki/Barrage> for
+    specific data on individual barrages.
+
+
+    Projectile Types
+
+There are five main projectiles fired by ships, from either their
+equipped weapons and/or barrages.
+
+  * *Arcing Shells* - These are shells that travel in an arcing pattern.
+    These shells are also able to go over shields. BB Guns and CB Guns
+    fall into this category.
+  * *Straight Shells* - These are shells that travel in a straight line.
+    These are blocked by shields. DD Guns, CL Guns, and CA Guns fall
+    into this category.
+  * *Torpedoes* - These travel underwater, and cannot be blocked outside
+    of specific shields that reference Torpedoes. In addition,
+    Airstrikes can clear all torpedoes currently traveling.
+  * *AA Bullets* - These only do damage to aircraft. AA Guns fall into
+    this category.
+  * *Plane Ordnances* - These are the bombs/rockets/torpedoes that drop
+    from planes during an airstrike. The bombs equipped by aircraft fall
+    into this category.
+
+
+    Ammo Types
+
+There are four main types of ammunition for non-aircraft weaponry and
+barrages:
+
+  * *Normal (Yellow)* - These are regular rounds that disappear on
+    impact with the first target hit, or the top or bottom boundaries.
+    This is the most common shell type used by target ships.
+  * *High Explosive (Red)* - /Also known as HE./ These rounds are
+    similar to Normal shells, but have a chance to set target ships on
+    fire in exchange for slower velocity.
+  * *Armor-Piercing (Blue)* - /Also known as AP./ These rounds are
+    similar to Normal shells, but have faster shell velocity and can
+    pierce through their targets. Usually AP weapons can pierce once (up
+    to 2 targets hit per bullet).
+  * *Semi-Armor-Piercing (Purple)* - /Also known as SAP./ These rounds
+    are similar to AP shells, but with different Armor Modifiers.
+    Currently, only the Twin 135mm <https://azurlane.koumakan.jp/wiki/
+    Twin_135mm_(Model_1938)>, Twin 203mm (Model 1927) <https://
+    azurlane.koumakan.jp/wiki/Twin_203mm_(Model_1927)>, Triple 406mm
+    (Model 1940 Prototype) <https://azurlane.koumakan.jp/wiki/
+    Triple_406mm_(Model_1940_Prototype)> fire this type of shell. Note
+    that the SAP shells fired by the Twin 135mm (Model 1938) do not
+    pierce targets.
+
+*Notes*:
+
+  * Each ammo type has their own *ArmorModifier* associated with it.
+    Refer to their respective equipment pages <https://
+    azurlane.koumakan.jp/wiki/Equipment_List> for those values.
+  * Barrages can drastically modify the characteristics of Ammo Types,
+    see the ship's specifc barrage information for more details.
+
+
+    Armor Modifiers
+
+There are three main armor types:
+
+  * *Light Armor* - Armor type for most Destroyers (DDs) and Light
+    Cruisers (CLs), with some exceptions.
+  * *Medium Armor* - Armor type for most Heavy Cruisers (CAs), Aircraft
+    Carriers (CVs), Light Aircraft Carriers (CVLs) and Battlecruisers
+    (BCs), with some exceptions.
+  * *Heavy Armor* - Armor type for most Battleships (BBs), with some
+    exceptions.
+
+To view the Armor type per ship, see the List of Ships by Stats
+<https://azurlane.koumakan.jp/wiki/List_of_Ships_by_Stats> wiki page for
+those values.
+
+
+    Stat Modifiers
+
+These are buffs that increase the *ScalingStat* of the damage.
+Generally, all bullet damage scales off of Firepower *Firepower*, all
+torpedo damage scales off of Torpedo *Torpedo*, all AA gun damage scales
+off of Anti-air *Anti-Air*, and and all aircraft damage scales off of
+Aviation *Aviation*, with some exceptions.
+
+Notations ShipBaseStat 	The base value of a stat. This is ship dependent.
+CatStatMultiplier 	Meowfficers <https://azurlane.koumakan.jp/wiki/
+Meowfficer> can also give stat bonuses based on their 3 inherent stats
+(Logistics, Directives, and Tactics). This total percent bonus is known
+as CatStatMultiplier. See this wiki page <https://azurlane.koumakan.jp/
+wiki/Meowfficer#Stats> for more information.
+StatPercentBuffs 	The *percentage* buff to a stat.
+SkillFlatBuffs 	Some ships (ex. North Carolina <https://
+azurlane.koumakan.jp/wiki/North_Carolina>, Ingraham <https://
+azurlane.koumakan.jp/wiki/Ingraham>) increase a ScalingStat by a
+percentage of an additional stat. In addition, certain augment modules
+increase stats by a non-percentage amount from their skills (ex.
+Officer's Sword <https://azurlane.koumakan.jp/wiki/Officer%27s_Sword>).
+These stat increases are treated seperately from everything else.
+
+
+      Flat Stat Modifiers
+
+These are the stat buffs that increase any *ScalingStat* by a non-
+percentage amount. All sources are additive to each other, and to the
+base stat.
+
+Source include:
+
+  * Equipment <https://azurlane.koumakan.jp/wiki/Equipment> equipped
+    onto the ship.
+  * Fleet Technology <https://azurlane.koumakan.jp/wiki/Fleet_Technology>
+  * Meowfficer <https://azurlane.koumakan.jp/wiki/Meowfficer> _Talents_
+
+Meowfficers <https://azurlane.koumakan.jp/wiki/Meowfficer> can also give
+stat bonuses based on their 3 inherent stats (Logistics, Directives, and
+Tactics). This total percent bonus is known as CatStatMultiplier. See
+this wiki page <https://azurlane.koumakan.jp/wiki/Meowfficer#Stats> for
+more information.
+
+In the damage formula, the ScalingStat is divided by 100. Therefore, the
+FlatScalingStat is:
+
+
+FlatScalingStat=(ShipBaseStat×CatStatMultiplier)+∑i=1n(FlatStatBuffsi)
+
+
+      Percentage Stat Modifiers
+
+These are buffs that increase any *ScalingStat* by a percentage amount.
+All sources of stat % increases stack additively.
+
+Sources include:
+
+  * Ship Skills (both on self and from other ships).
+  * Equipment <https://azurlane.koumakan.jp/wiki/Equipment> Skills (both
+    equipped onto the ship and from other ships).
+  * Meowfficer <https://azurlane.koumakan.jp/wiki/Meowfficer> _Skills_
+    (see this wiki page <https://azurlane.koumakan.jp/wiki/
+    Meowfficer#List_of_Meowfficers_and_Skills> for more information).
+  * Formation <https://azurlane.koumakan.jp/wiki/Combat#Formation> Stat
+    Bonuses.
+
+and more!
+
+PercentStatModifier=1+∑i=1n(StatPercentBuffsi)
+
+
+      Misc. Skill Flat Stat Buffs
+
+These skill buffs that increase any ScalingStat by a flat amount.
+
+Sources include:
+
+  * Straight Buffs (ex. Zeppy's <https://azurlane.koumakan.jp/wiki/
+    Zeppy> *Taste My Wrath!*).
+  * Stat Conversion Skils (ex. North Carolina's <https://
+    azurlane.koumakan.jp/wiki/North_Carolina> *AA Firepower*)
+      o /Stat Conversions use the Base Stat + any Equipment Stats when
+        calculating the conversion amount, NOT the CurrentStat./
+  * Augment Module Skills (ex. Officer's Sword <https://
+    azurlane.koumakan.jp/wiki/Officer%27s_Sword>)
+
+
+FlatStatModifier=∑i=1n(SkillFlatBuffsi)
+
+
+      Final Effective Stat
+
+There are 2 values that can be used in calculations:
+*CurrentScalingStat* or *StatMultiplier*.
+
+  * For all formulas with a stat value, assume the stat is calculated in
+    the same way as *CurrentScalingStat* unless otherwise stated.
+
+
+        CurrentStat
+
+CurrentScalingStat=(FlatScalingStat×PercentStatModifier)+FlatStatModifier
+
+
+CurrentScalingStat=[(ShipBaseStat×CatStatMultiplier)+∑i=1n(FlatStatBuffsi)]×(1+∑i=1n(StatPercentBuffsi))+∑i=1n(SkillFlatBuffsi)
+
+
+        StatMultiplier
+
+StatMultiplier=1+CurrentScalingStat100
+
+
+StatMultiplier=1+(FlatScalingStat×PercentStatModifier)+FlatStatModifier100
+
+
+    Universal Modifiers
+
+
+      DamageRatioBullet
+
+These are effects that affect a ship's *damage dealt* _without any
+specification_ (not including Level Advantage <#Level_Advantage>).
+
+Sources include:
+
+  * Ship Skills (ex. Enterprise <https://azurlane.koumakan.jp/wiki/
+    Enterprise>'s *Lucky E*).
+  * Ammo Bonus <https://azurlane.koumakan.jp/wiki/Combat#Ammo>.
+  * Meowfficers <https://azurlane.koumakan.jp/wiki/Meowfficer> (Flame's
+    Aggression).
+  * Exercise Modifiers <https://azurlane.koumakan.jp/wiki/
+    Exercise#Special_Modifiers>.
+
+and more!
+
+TotalDRB=1+∑i=1n(UniversalDamageBuffsi)
+
+For example, if Enterprise <https://azurlane.koumakan.jp/wiki/
+Enterprise> triggered *Lucky E*, and the fleet was *Out-Of-Ammo*, then:
+
+TotalDRB=1+(1+(−0.5))=1.5
+
+
+      InjureRatio
+
+These are effects applied *to a target*, that affect the target's damage
+received _without any specification_ (not including Threat Level
+<#Threat_Level>). These stack multiplicatively with one another. /
+Negative values indicate damage reduction./
+
+Sources include:
+
+  * Ship Skills, for example:
+      o Helena <https://azurlane.koumakan.jp/wiki/Helena>'s *Radar Scan*.
+      o Roon µ <https://azurlane.koumakan.jp/wiki/Roon_%C2%B5>'s *Encore
+        Flare*.
+      o Any universal damage reduction (ex. Graf Zeppelin <https://
+        azurlane.koumakan.jp/wiki/Graf_Zeppelin>'s *Iron Blood Wings*).
+  * Exercise Modifiers <https://azurlane.koumakan.jp/wiki/
+    Exercise#Special_Modifiers>.
+
+and more!
+
+TotalInjureRatio=∏i=1n(1+Debuffi)
+
+
+    Weapon Type Modifiers
+
+
+      DamageRatioByType
+
+These are effects that affect a ship's damage dealt _with a specific
+type of weapon_.
+
+Sources include:
+
+  * Ship Skills, for example:
+      o Kinu (Retrofit) <https://azurlane.koumakan.jp/wiki/Kinu>'s
+        *Demon's Wish* (increases Torpedo TRP DMG dealt).
+      o Atago <https://azurlane.koumakan.jp/wiki/Atago>'s *Arsonist*
+        (increases HE DMG dealt).
+  * Airspace Control / ACV <https://azurlane.koumakan.jp/wiki/
+    Combat#Airspace_Control> (modifies AVI DMG dealt).
+
+
+      InjureRatioByType
+
+These are effects applied *to a target*, that affect the target's damage
+received _by a specific type of weapon_. /Negative values indicate
+damage reduction./
+
+Sources include:
+
+  * Ship skills, for example:
+      o Tanikaze (Retrofit) <https://azurlane.koumakan.jp/wiki/
+        Tanikaze>'s *Target Designator: Torpedo* (increases target
+        Torpedo TRP DMG taken).
+      o Valiant <https://azurlane.koumakan.jp/wiki/Valiant>'s *Leading
+        the Way* (increases target Firepower Firepower DMG taken).
+      o August von Parseval <https://azurlane.koumakan.jp/wiki/
+        August_von_Parseval>'s *Hex-Principle of Shattering* (increases
+        target Aviation Aviation DMG taken).
+      o Mogami <https://azurlane.koumakan.jp/wiki/Mogami>'s *AP
+        Protection* (decreases self AP DMG taken).
+  * Armor Break <https://azurlane.koumakan.jp/wiki/Armor_breaking>
+    (increases target Firepower Firepower DMG taken).
+
+
+      Armor Break
+
+*Armor Break* (also called *Armor Shatter*) is a debuff that increases
+the Firepower Firepower scaling damage a target receives. Most Armor
+Break debuffs can only be applied to *Heavy Armor* targets, which
+include most Battleships <https://azurlane.koumakan.jp/wiki/
+Category:Battleships> and some Battlecruisers <https://
+azurlane.koumakan.jp/wiki/Category:Battlecruisers>.
+
+The table below shows all sources of armor breaks. Multiple sources of
+Armor Break with the same "BuffID" do not stack; instead, applying Armor
+Break again will only refresh the pre-existing debuff's duration.
+Multiple sources of Armor Break with /different/ BuffIDs /can/ stack.
+
+Armor Break Values Expand Name 	Skill 	Damage Increase 	Duration 	Proc
+Chance 	BuffID 	Notes
+BB AP Ammo 		8% 	6s 	20% 	401 	Heavy armor only
+BB AP*/AP^ Ammo 		8% 	6s 	25% 	401 	Heavy armor only
+<https://azurlane.koumakan.jp/wiki/Fairey_Barracuda_(831_Squadron)>
+Fairey Barracuda (831 Squadron) <https://azurlane.koumakan.jp/wiki/
+Fairey_Barracuda_(831_Squadron)> 		8% 	6s 	24% 	401 	
+<https://azurlane.koumakan.jp/wiki/
+Nakajima_J5N_Tenrai_(Dive_Bomber_Prototype)>
+Nakajima J5N Tenrai (Dive Bomber Prototype) <https://
+azurlane.koumakan.jp/wiki/Nakajima_J5N_Tenrai_(Dive_Bomber_Prototype)>
+		8% 	6s 	24% 	401 	
+<https://azurlane.koumakan.jp/wiki/Massachusetts>
+Massachusetts <https://azurlane.koumakan.jp/wiki/Massachusetts> 	
+<https://azurlane.koumakan.jp/wiki/File:Skill_11560.png>
+2,700 Pounds of Justice 	8% 	6s 	20% 	401 	Heavy armor only
+<https://azurlane.koumakan.jp/wiki/Baltimore>
+Baltimore <https://azurlane.koumakan.jp/wiki/Baltimore> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_12480.png>
+APsolute Ammunition 	8% 	6s 	3.50% 	401 	Heavy armor only
+<https://azurlane.koumakan.jp/wiki/Georgia>
+Georgia <https://azurlane.koumakan.jp/wiki/Georgia> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_19160.png>
+Heavy Barrel Blaster 	8% 	6s 	20% 	401 	Heavy armor only
+<https://azurlane.koumakan.jp/wiki/Valiant>
+Valiant <https://azurlane.koumakan.jp/wiki/Valiant> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_13500.png>
+Leading the Way 	8% 	20s 	100% 	402 	
+<https://azurlane.koumakan.jp/wiki/Honoka>
+Honoka <https://azurlane.koumakan.jp/wiki/Honoka> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_106040.png>
+Super Mega Explosion(+) 	8% 	6s 	20% 	401 	Heavy armor only
+<https://azurlane.koumakan.jp/wiki/Nakiri_Ayame>
+Nakiri Ayame <https://azurlane.koumakan.jp/wiki/Nakiri_Ayame> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_105110.png>
+Demon Cutter Asura-Rakshasa 	8% 	6s 	50% 	401 	
+<https://azurlane.koumakan.jp/wiki/Intrepid>
+Intrepid <https://azurlane.koumakan.jp/wiki/Intrepid> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_13070.png>
+Soaring Silver Wings 	8% 	6s 	100% 	401 	BB/BC/BBV only
+<https://azurlane.koumakan.jp/wiki/Albacore_%C2%B5>
+Albacore µ <https://azurlane.koumakan.jp/wiki/Albacore_%C2%B5> 	
+<https://azurlane.koumakan.jp/wiki/File:Skill_13850.png>
+Universal Surprise!(+) 	8% 	6s 	70% 	401 	
+<https://azurlane.koumakan.jp/wiki/New_Jersey>
+New Jersey <https://azurlane.koumakan.jp/wiki/New_Jersey> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_14510.png>
+Dragon's Breath 	5% 	8s 	50% 	351 	
+<https://azurlane.koumakan.jp/wiki/File:Skill_14520.png>
+Freedom Through Firepower 	5% 	8s 	50% 	351 	
+<https://azurlane.koumakan.jp/wiki/%C3%84gir>
+Ägir <https://azurlane.koumakan.jp/wiki/%C3%84gir> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_19430.png>
+Jöttun's Jaws 	8% 	6s 	100% 	401 	
+<https://azurlane.koumakan.jp/wiki/An_Shan>
+An Shan <https://azurlane.koumakan.jp/wiki/An_Shan> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_15190.png>
+Azure Dragon's Dance 	8% 	6s 	100% 	401 	
+<https://azurlane.koumakan.jp/wiki/Yume_Minami>
+Yume Minami <https://azurlane.koumakan.jp/wiki/Yume_Minami> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_108120.png>
+Something Beam(+) 	8% 	6s 	100% 	401 	Heavy armor only
+<https://azurlane.koumakan.jp/wiki/File:Skill_108130.png>
+Dynazenon Full Burst
+<https://azurlane.koumakan.jp/wiki/File:Augment_12120.png>
+Dyna Wing
+<https://azurlane.koumakan.jp/wiki/Rikka_Takarada>
+Rikka Takarada <https://azurlane.koumakan.jp/wiki/Rikka_Takarada> 	
+<https://azurlane.koumakan.jp/wiki/File:Skill_108020.png>
+Slash & Circus 	8% 	6s 	100% 	401 	
+<https://azurlane.koumakan.jp/wiki/Scharnhorst_META>
+Scharnhorst META <https://azurlane.koumakan.jp/wiki/Scharnhorst_META> 	
+<https://azurlane.koumakan.jp/wiki/File:Skill_800340.png>
+Dual Snipe 	8% 	10s 	100% 	452 	
+<https://azurlane.koumakan.jp/wiki/New_Orleans>
+New Orleans <https://azurlane.koumakan.jp/wiki/New_Orleans> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_14920.png>
+Nola Finale 	8% 	6s 	100% 	401 	
+<https://azurlane.koumakan.jp/wiki/Revenge>
+Revenge <https://azurlane.koumakan.jp/wiki/Revenge> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_15650.png>
+Revengeful Strike 	8% 	8s 	100% 	456 	
+<https://azurlane.koumakan.jp/wiki/Renown_META>
+Renown META <https://azurlane.koumakan.jp/wiki/Renown_META> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_800540.png>
+Flameforged Edge 	8% 	8s 	100% 	470 	
+<https://azurlane.koumakan.jp/wiki/Voroshilov>
+Voroshilov <https://azurlane.koumakan.jp/wiki/Voroshilov> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_16630.png>
+Voroshilov's Icebind 	5% 	8s 	100% 	533 	
+<https://azurlane.koumakan.jp/wiki/Edinburgh>
+Edinburgh <https://azurlane.koumakan.jp/wiki/Edinburgh> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_2080.png>
+Piercing Shells - Edinburgh 	8% 	6s 	10% 	1090104 	
+<https://azurlane.koumakan.jp/wiki/Tamaki>
+Tamaki <https://azurlane.koumakan.jp/wiki/Tamaki> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_106330.png>
+lisanthius Halation(+) 	8% 	6s 	100% 	401 	
+<https://azurlane.koumakan.jp/wiki/Prinz_Eugen>
+Prinz Eugen <https://azurlane.koumakan.jp/wiki/Prinz_Eugen> 	<https://
+azurlane.koumakan.jp/wiki/File:10040.png>
+Anti-Armour-Rounds 	8% 	6s 	8% 	401 	
+<https://azurlane.koumakan.jp/wiki/Little_Spee>
+Little Spee <https://azurlane.koumakan.jp/wiki/Little_Spee> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_16090.png>
+Metal Gauntlet Mash! 	8% 	6s 	100% 	401 	CL/DD only
+<https://azurlane.koumakan.jp/wiki/Gascogne_%C2%B5>
+Gascogne µ <https://azurlane.koumakan.jp/wiki/Gascogne_%C2%B5> 	
+<https://azurlane.koumakan.jp/wiki/File:Skill_12780.png>
+Cœur Battant - µ Blue 	8% 	6s 	20% 	401 	Heavy armor only
+<https://azurlane.koumakan.jp/wiki/Guam>
+Guam <https://azurlane.koumakan.jp/wiki/Guam> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_17350.png>
+On-Air Broadcast Assistance 	8% 	6s 	100% 	401 	
+<https://azurlane.koumakan.jp/wiki/Halford>
+Halford <https://azurlane.koumakan.jp/wiki/Halford> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_19790.png>
+Nocturnal Judgment 	8% 	6s 	100% 	19797 	
+<https://azurlane.koumakan.jp/wiki/Fei_Yuen>
+Fei Yuen <https://azurlane.koumakan.jp/wiki/Fei_Yuen> 	<https://
+azurlane.koumakan.jp/wiki/File:Skill_17470.png>
+Lady Yuen's Grand "Adventure" 	5% 	8s 	Complicated 	17489 	
+
+
+      Total Modifier
+
+DamageRatioByType and InjureRatioByType are additive with each other *if
+the type is the same*, and multiplicatively stack with different,
+applicable types.
+
+
+TotalDRT=∏i=1n(1+DamageRatioByTypei+InjureRatioByTypei)
+
+
+Example Scenario 1: Neptune <https://azurlane.koumakan.jp/wiki/Neptune>
+fires an AP shell at Mogami <https://azurlane.koumakan.jp/wiki/Mogami>,
+who is affected by Armor Break. Notice how since Armor Break (FP DMG) is
+seperate from Neptune/Mogami (AP DMG), it multiplicatively stacks.
+
+TotalDRT=(1+0.4+(−0.2))×(1+0.08)=1.296
+
+
+Example Scenario 2: Kinu (Retrofit) <https://azurlane.koumakan.jp/wiki/
+Kinu> fires a Torpedo at a target afflicted by Tanikaze (Retrofit)
+<https://azurlane.koumakan.jp/wiki/Tanikaze>'s *Target Designator:
+Torpedo*.
+
+TotalDRT=(1+0.15+0.4)=1.55
+
+
+    Hunter Modifiers
+
+These are effects that affect a ship's damage dealt to targets that meet
+certain criteria. They are additive *if the type is the same*, and
+multiplicatively stack with different, applicable types.
+
+Sources include:
+
+  * Ship Skills, for example:
+      o Deutschland <https://azurlane.koumakan.jp/wiki/Deutschland>'s
+        *Pocket Battleship* (+DMG dealt to DD/CL).
+      o Kawakaze <https://azurlane.koumakan.jp/wiki/Kawakaze>'s *Lunga
+        Point's Strike* (+DMG dealt to CB/CA/CL).
+      o Jeanne d'Arc <https://azurlane.koumakan.jp/wiki/
+        Jeanne_d%27Arc>'s *La Pucelle* (+DMG dealt to HMS ships).
+  * Equipment <https://azurlane.koumakan.jp/wiki/Equipment> (ex. J-class
+    Crown <https://azurlane.koumakan.jp/wiki/J-class_Crown>)
+  * Operation Siren DMG Boost <https://azurlane.koumakan.jp/wiki/
+    Equipment#Enhance_(Upgrade)> (+DMG dealt to Siren <https://
+    azurlane.koumakan.jp/wiki/Siren> targets in Operation Siren
+    <https://azurlane.koumakan.jp/wiki/Operation_Siren>)
+      o /All Hunter Skills that affect Siren targets (Operation Siren
+        DMG Boost, Siren Killer) cap at a maximum of *+20%* DMG dealt to
+        Siren ships./
+
+
+TotalHunter=∏i=1n(1+HunterBuffi)
+
+
+Example Scenario 1: Georgia <https://azurlane.koumakan.jp/wiki/
+Georgia>'s *Ironsight Caliber* combined with Siren Killer.
+
+TotalHunter=(1+0.2)×(1+0.15)=1.38
+
+
+Example Scenario 2: Centaur <https://azurlane.koumakan.jp/wiki/
+Centaur>'s *Swordfishes, Attack!* combined with the TBM Avenger (VT-18
+Squadron) <https://azurlane.koumakan.jp/wiki/
+General_Motors_TBM_Avenger_(VT-18_Squadron)>.
+
+TotalHunter=(1+0.1+0.03)=1.13
+
+
+    Critical Hits
+
+These are hits that do significantly more damage than usual.
+
+
+      Critical Rate
+
+The Critical Rate for your ships is based on a formula, with the scaling
+stats calculated in the same method as up *here
+<#Final_Effective_Stat>*. The formula is as follows:
+
+
+CriticalRate=0.05+(AttackerHitAttackerHit+TargetEvasion+2000)+(AttackerLuck−TargetLuck+LevelDifference5000)+∑i=1nCriticalRateBuffsn
+
+CriticalRate≤1
+
+
+      Critical Damage
+
+Notations CriticalBit 	This value is *0* when the damage is not a
+critical hit, and *1* when the damage is a critical hit.
+CriticalDMGBuff 	Any Critical Damage buffs provided by ship skills and/
+or equipment. All CriticalDMGBuffs stack additively with one another.
+
+The total *CriticalModifier* is as follows:
+
+CriticalModifier=1+CriticalBit×(0.5+∑i=1nCriticalDMGBuffn)
+
+
+Example Scenario 1: Howe <https://azurlane.koumakan.jp/wiki/Howe>
+equipped with a Type 1 AP Shell <https://azurlane.koumakan.jp/wiki/
+Type_1_Armor_Piercing_Shell> lands a critical hit on a target.
+
+CriticalModifier=1+1×(0.5+0.25)=1.75
+
+
+    Aimed Shot (Manual) Modifiers
+
+*ManualBonus* is a bonus given to BB Main Gun and DDGm Missile Damage if
+it is manually aimed by the player.
+
+*AimedShotBuffs* are modifiers that affect the damage dealt by the 1st
+salvo, seperate from the ManualBonus. This modifier can still apply even
+when not manually aiming.
+
+The default manual bonus is *20%*. Be careful, since some skills *change
+the default manual bonus* instead of increasing the damage dealt by
+aimed shots. If the shot isn't manually aimed, then *ManualBonus* is set
+to 0.
+
+
+ManualModifier=1+ManualBonus+AimedShotBuffs
+
+
+Example Scenario 1: A shot fired by Gascogne <https://
+azurlane.koumakan.jp/wiki/Gascogne> (*Precision Salvo Control*), and the
+shot is manually aimed.
+
+ManualModifier=1+0.4+0=1.4
+
+
+Example Scenario 2: The first volley of a salvo fired by Jean Bart
+<https://azurlane.koumakan.jp/wiki/Jean_Bart> (*Pirate Soul*), and the
+shot is manually aimed.
+
+ManualModifier=1+0.6+0.6=2.2
+
+
+Example Scenario 3: The first volley of a salvo fired by Jean Bart
+<https://azurlane.koumakan.jp/wiki/Jean_Bart> (*Pirate Soul*), and the
+shot is NOT manually aimed.
+
+ManualModifier=1+0+0.6=1.6
+
+
+    Level Advantage
+
+For Threat Level Mechanics, see this wiki page <https://
+azurlane.koumakan.jp/wiki/Combat#Threat_Level>.
+
+These are the damage modifiers gained (or lost) due to the difference in
+ship levels between allied and target ships, up to (± 50% damage dealt/
+received).
+
+Once a stage is considered *Threat Level 0 (Safe)*, the levels of
+*enemy* ships are artifically decreased for the purposes of these
+formulas. If you are calculating damage dealt by an enemy, allied ship
+levels are not lowered. See this wiki page <https://
+azurlane.koumakan.jp/wiki/Combat#Threat_Level> for more information.
+
+
+LevelDifference=AttackerShipLevel−(TargetShipLevel−ArtificalLevelDecrease)
+
+LevelAdvDmgModifier=1+2×LevelDifference100
+
+0.5≤LevelAdvDmgModifier≤1.5.
+
+
+    Threat Level
+
+For Threat Level Mechanics, see this wiki page <https://
+azurlane.koumakan.jp/wiki/Combat#Threat_Level>.
+
+This is a damage reduction applied *only to allied ships*, based on the
+threat level of the stage. See this wiki page <https://
+azurlane.koumakan.jp/wiki/Combat#Threat_Level> for more information.
+
+
+ThreatLevelDmgModifier=1−[2×(MaxStageThreatLevel−CurrentStageThreatLevel)100]
+
+
+On stages without Threat Level, *MaxStageThreatLevel* and
+*CurrentStageThreatLevel* are both set to *0*.
+
+
+Example Scenario 1: *MaxStageThreatLevel* = 10,
+*CurrentStageThreatLevel* = 0.
+
+
+ThreatLevelDmgModifier=1−2×(10−0)100=0.8
+
+
+    Air Damage Reduction
+
+For CV Detection Mechanics, see this wiki page <https://
+azurlane.koumakan.jp/wiki/Combat#Detection_Line>.
+
+This is damage reduction for AVI damage gained from a *defending ship's
+AA* stat, with the variables calculated in the same method as up here
+<#Final_Effective_Stat>.
+
+CloakBit=1 if the attacking CV is considered *"hidden"*, and *0* otherwise.
+
+
+TargetAAModifier=150150+CurrentAA+(CloakBit×0.1)
+
+
+TargetAAModifier≤1
+
+
+    Final Damage Dealt
+
+The following calculations account for every quantitative factor applied
+to both the allied ship launching the attack, and the target ship
+receiving the attack. In practice, you will likely not be able to land
+all parts of the attack geometrically, see *here <#Weapon_Accuracy>* for
+more details.
+
+*Notes:*
+
+  * The minimum damage dealt is always *1* if the damage isn't evaded.
+  * /Barrages can have multiple different parts; calculate each part
+    seperately then add them together to get a final damage number./
+
+
+      Guns / Torpedoes
+
+This is the damage dealt to the target *by 1 weapon bullet*. The
+effective scaling stat is usually Firepower FP / Torpedo TRP
+resepectively, unless otherwise stated. /This formula also works for
+depth charges equipped by vanguard ships, with the scaling stat being
+Anti-submarine warfare ASW./
+
+  * The default *WeaponScalingCoefficient* is 1, however some barrages /
+    equipment might change this value. See the weapon's page for more
+    information.
+
+
+WeaponStatMultiplier=1+CurrentScalingStat×WeaponScalingCoefficient100
+
+
+DamageDealt=[WeaponBaseDmg×WeaponCoeff×SlotEfficiency×WeaponStatMultiplier+random(0,1,2)]×WeaponArmorModifier×TotalDRB×TotalInjureRatio×TotalDRT×TotalHunter×LevelAdvDmgModifier×ThreatLevelDmgModifier×ManualModifier×CriticalModifier
+
+
+*Example Scenario*: Solo Level 120 Howe <https://azurlane.koumakan.jp/
+wiki/Howe> with Type 1 AP Shell <https://azurlane.koumakan.jp/wiki/
+Type_1_Armor_Piercing_Shell> and Super Heavy Shell <https://
+azurlane.koumakan.jp/wiki/Super_Heavy_Shell> equipped, fires a +10
+enhanced T3 Triple 406mm Mk 6 Main Gun Mount <https://
+azurlane.koumakan.jp/wiki/Triple_406mm_(16%22/45_Mk_6)#Type_3-0> at a
+Level 125 Light Armor target affected by Helena <https://
+azurlane.koumakan.jp/wiki/Helena>'s *Radar Scan* on Threat Level 10;
+Random = 0, with some Fleet Technology bonuses.
+
+  * *WeaponBaseDmg* = 156, *WeaponCoeff* = 1.05, *SlotEfficiency* = 1.4
+  * *WeaponStatMultiplier* = (419 + 67 + 85 + 25 + 5) * 1 / 100 x 1.12 +
+    1 = 7.7312
+      o *FlatStatBuffs* = 67 + 85 due to Auxiliary, +25 from Main Gun,
+        +5 from Fleet Technology Bonus.
+      o *PercentStatModifier* = 1 + 0.12 = 1.12 due to skills.
+      o No *CatStatMultiplier*, so it was set to 1.
+      o No *AugmentModuleSkillException*, no *StatConversionBuffs*, so
+        those were set to 0
+  * *WeaponArmorModifier* = 1.4
+  * *TotalDRB* = 1
+      o No universal damage buffs anywhere.
+  * *TotalInjureRatio* = 1.4
+      o Helena <https://azurlane.koumakan.jp/wiki/Helena> debuff is +40%
+        damage taken by targets affected.
+  * *TotalDRT* = 1
+      o No specific weapon type buffs.
+  * *TotalHunter* = 1
+      o No hunter buffs.
+  * *LevelAdvDmgModifier* = 1 + (2*(120-125)/100) = 0.9
+      o 10% less damage due to levels.
+  * *ThreatLevelDmgModifier* = 1
+      o Doesn't apply to allied damage dealt.
+  * *ManualModifier* = 1
+      o Shot wasn't manually aimed.
+  * *CriticalModifier* = 1
+      o Shot wasn't a critical hit.
+
+Therefore:
+
+DamageDealt=[156×1.05×1.4×7.7312+0]×1.4×1×1.4×1×1×0.9×1×1≈3127.43
+
+Remember, this is only for *ONE* bullet that did not critically hit.
+
+
+      Aircraft Ordnance
+
+This is the damage dealt to the target *by 1 aircraft bomb/torpedo/
+rocket*. It is calculated similarly to Guns/Torpedoes, with a few key
+differences:
+
+  * The scaling stat is almost always Aviation AVI, unless otherwise
+    stated. Plane AA guns use Aviation AVI for their calculations.
+  * *Weapon* refers to a singular Aircraft bomb/torpedo/rocket. For
+    total plane damage, calculate each bomb/torpedo/rocket type
+    seperately, and add them together.
+  * For Aircraft bombs/rockets, the default *WeaponScalingCoefficient*
+    is 0.8, however all aircraft torpedoes and fighter/torpedo bomber
+    rockets have a *WeaponScalingCoefficient* of 1.
+  * All ships (both Allied and Enemies) have *TargetAAModifier*, which
+    uses their AA stat to reduce incoming Aviation AVI damage.
+
+
+WeaponStatMultiplier=1+CurrentScalingStat×WeaponScalingCoefficient100
+
+
+DamageDealt=[WeaponBaseDmg×WeaponCoeff×SlotEfficiency×WeaponStatMultiplier+random(0,1,2)]×WeaponArmorModifier×TotalDRB×TotalInjureRatio×TotalDRT×TotalHunter×LevelAdvDmgModifier×ThreatLevelDmgModifier×CriticalModifier×TargetAAModifier
+
+
+    Weapon Reload
+
+Reload *Reload* is the rate at which weapons charge up. For rate of
+fire, take the reciprocal of the calculated time interval. For example,
+if 'fire rate' is 2s, rate of fire will be 0.5 waves/second.
+
+Notations WeaponReloadTime 	The default ReloadTime of a weapon, in
+seconds. (This Wiki lists this stat as /RLD/ in the weapon tables)
+CurrentReload 	Reload stat of a ship calculated in the same method as up
+here <#Final_Effective_Stat>.
+
+
+      Guns / Torpedoes
+
+The reload time of a gun or torpedo is affected by the Reload Reload
+stat of your ship. The formula for this is as follows:
+
+ReloadTime=WeaponReloadTime×200CurrentReload+100+VolleyTime+AbsoluteCooldown
+
+
+*Notes:*
+
+  * The weapon reload time displayed in-game does not consider
+    *VolleyTime* nor *AbsoluteCooldown*.
+  * To see the default WeaponReloadTime value, unequip the weapon and
+    check its reload in the Depot <https://azurlane.koumakan.jp/wiki/
+    Equipment#Equipment_(Standard)>.
+  * *VolleyTime* and *AbsoluteCooldown* are both gun dependent.
+      o *VolleyTime* is specific to the gun itself, and can be found on
+        the specific gun's wiki page.
+      o *AbsoluteCooldown* is theorized to be based on the gun type, and
+        not the gun itself.
+
+
+      Airstrike
+
+The reload for airstrikes is similar to that of guns, except that it
+considers the reload of every plane equipped to the ship. The formula
+for this is as follows:
+
+LaunchCooldown=∑iN(cooldown(Planei)×numberof(Planei))∑iNnumberof(Planei)×2.2×200CurrentReload+100+0.033
+
+
+    Anti-Air Guns
+
+AA Guns within the fleet are combined and averaged to deal AA gun
+damage. This means any AA guns equipped in the Main Fleet will act as
+though they were equipped in the escort fleet. AA guns will only fire
+when there are planes in the AA region indicated by the dotted line
+surrounding the escort fleet.
+
+
+      Default AA Guns
+
+All ships with an AA Gun Equipment slot that do *NOT* have an AA Gun
+equipped are given a default AA Gun, similar to other equipment types.
+
+  * The ships from the event Rondo at Rainbow's End <https://
+    azurlane.koumakan.jp/wiki/Rondo_at_Rainbow%27s_End> are not given a
+    default AA Gun.
+  * Rikka Takarada <https://azurlane.koumakan.jp/wiki/Rikka_Takarada>
+    and Reisalin Stout <https://azurlane.koumakan.jp/wiki/
+    Reisalin_Stout> are not given a default AA gun.
+
+Default AA Guns Ship Name 	Skill Name 	Damage 	Range 	Reload 	
+WeaponCoeff 	Scaling
+Default AA 	Default AA 	4 	20 	0.40s 	100% 	100% AA
+
+
+      Ghost AA Guns
+
+These are special AA Guns that are hardcoded into the ship or equipment,
+regardless of if the ship has an AA Gun equipped or not. These Ghost AA
+Guns function like traditional AA Guns, and thus have the same
+interactions with other traditional AA Guns.
+
+Ship Ghost AA Guns Collapse Ship 	Skill Name 	Damage 	Range 	Reload 	
+WeaponCoeff 	Scaling 	Notes
+<https://azurlane.koumakan.jp/wiki/Laffey_II>
+Laffey II
+
+Laffey II <https://azurlane.koumakan.jp/wiki/Laffey_II> 	*Bunbun Scout*
+	284 	30 	1.03s 	100% 	100% AA 	Requires Eagle Union <https://
+azurlane.koumakan.jp/wiki/Eagle_Union> equipment.
+<https://azurlane.koumakan.jp/wiki/Allen_M._Sumner>
+Allen M. Sumner
+
+Allen M. Sumner <https://azurlane.koumakan.jp/wiki/Allen_M._Sumner> 	
+*Bang for Your Buck* 	142 	30 	1.038s 	100% 	100% AA 	Requires Eagle
+Union <https://azurlane.koumakan.jp/wiki/Eagle_Union> equipment.
+<https://azurlane.koumakan.jp/wiki/Shimanto>
+Shimanto
+
+Shimanto <https://azurlane.koumakan.jp/wiki/Shimanto> 	*Divine Presence*
+	126 	30 	1.27s 	100% 	100% AA 	
+Chao Ho-Class CLs <https://azurlane.koumakan.jp/wiki/
+Category:Chao_Ho_class> 	Default AA 	23 	25 	0.99s 	100% 	100% AA 	
+Hai Chi-Class CLs <https://azurlane.koumakan.jp/wiki/
+Category:Hai_Chi_class> 	Default AA 	23 	25 	0.99s 	100% 	100% AA 	
+
+*All stats in the table below assume +10 equipment.*
+
+Equipment Ghost AA Guns Collapse Equipment 	Skill Name 	Damage 	Range 	
+Reload 	WeaponCoeff 	Scaling 	Notes
+T0
+Rikka Takarada
+<https://azurlane.koumakan.jp/wiki/Sky_Vitter#Type_0-0>
+Sky Vitter
+
+Sky Vitter <https://azurlane.koumakan.jp/wiki/Sky_Vitter> 	*Sky Vitter*
+	150 	28 	1.17s 	100% 	100% AA 	WeaponCoeff increases to 118% at +13.
+T0
+Resalin Stout
+<https://azurlane.koumakan.jp/wiki/Laute_Plajig#Type_0-0>
+Laute Plajig
+
+Laute Plajig <https://azurlane.koumakan.jp/wiki/Laute_Plajig> 	
+*Senselessness* 	150 	28 	1.17s 	100% 	100% AA 	WeaponCoeff increases to
+118% at +13.
+T0
+<https://azurlane.koumakan.jp/wiki/Triple_150mm_(Type_5_Prototype)#Type_0-0>
+Triple 150mm (Type 5 Prototype)
+
+Prototype Triple 150mm Type 5 High-Angle Gun Mount <https://
+azurlane.koumakan.jp/wiki/Triple_150mm_(Type_5_Prototype)> 	*Additional
+Anti-Air Weaponry* 	85 	38 	2.0s 	100% 	100% AA 	Only 1 active AA Gun
+*per ship*.
+
+
+      Time Fuze AA Guns
+
+See also: List of AA Time Fuze Guns <https://azurlane.koumakan.jp/wiki/
+List_of_AA_Time_Fuze_Guns>
+
+Time Fuze AA Guns are special AA Guns only equippable by Battleships
+<https://azurlane.koumakan.jp/wiki/Category:Battleships> and
+Battlecruisers <https://azurlane.koumakan.jp/wiki/
+Category:Battlecruisers>. Time Fuze AA Gun Mechanics are similar to
+traditional AA guns, but calculated seperately.
+
+
+      AA Damage
+
+See also: Talk:Combat <https://azurlane.koumakan.jp/wiki/Talk:Combat>
+for more specific details
+
+The damage per instance of Anti-Air fire is affected by the Anti-air AA
+stat of *all ships with the same type of AA guns in the fleet*
+(including Ghost AA Guns). The formula for this is as follows:
+
+FinalDamage=∑foreachship(∑foreachgun(EquipmentDamage×SlotEfficiency×NumberofMounts)×AAMultiplier)
+
+Each point of AA thus provides approximately a 1% bonus to AA damage.
+This damage is then distributed among the target planes, though with
+some random factor. Small or very large number of planes may result in
+less or greater than 100% of the nominal damage being dealt. Average
+results can be seen in this plot:
+
+<https://azurlane.koumakan.jp/wiki/File:Mean_aa_damage_plot.png>
+
+Refer to Talk:Combat <https://azurlane.koumakan.jp/wiki/Talk:Combat> for
+the exact mechanics.
+
+
+      AA Reload
+
+The reload is dependent on the Reload Reload stat of *all ships with the
+same type of AA guns in the fleet* (including Ghost AA Guns). This is
+equal to the average reload time of all equipped AA guns in the fleet,
+plus a constant.
+
+IndividualAAReload=WeaponReloadTime×200CurrentReload+100
+
+
+AAReload=∑i(IndividualAAReloadi)NumberOfAAGuns+AbsoluteCooldown
+
+
+*Notes:*
+
+  * The weapon reload time displayed in-game does not consider
+    *AbsoluteCooldown*, nor average the reload with all other ships in
+    the fleet.
+      o *AbsoluteCooldown* for AA Guns is theorized to be 0.8667s.
+  * To see the default WeaponReloadTime value, unequip the weapon and
+    check its reload in the Depot <https://azurlane.koumakan.jp/wiki/
+    Equipment#Equipment_(Standard)>.
+
+
+      AA Range
+
+The coverage of *traditional* AA fire is outlined by the dotted lines
+surrounding your escort fleet. This is equal to the average range of all
+equipped traditional AA guns in the fleet:
+
+EffectiveRange=∑in(AAGunRangei)NumberOfAAGuns
+
+Unlike traditional AA Guns, Time Fuze AA Gun range is semi-circular /
+rectangular from the Main Fleet position of the ship equipping it. This
+combined AA Gun is placed on a ship that is equipping a Time Fuze AA
+Gun, with priority given to flagship, top, then bottom positions in the
+Main Fleet. Time Fuze AA Gun range is calculated in the same method as
+above.
+
+
+    Anti-Submarine Warfare
+
+→ Main article: Anti-Submarine Warfare <https://azurlane.koumakan.jp/
+wiki/Anti-Submarine_Warfare#Mechanics>
+
+
+    Collision Damage
+
+
+      Ramming
+
+This is damage dealt when an attacking unit physically collides with a
+target unit. It is computed as follows:
+
+RammingDamage=0.025×AttackerShipMaxHP×TargetShipMaxHP×(1+TargetShipRamAttackBonus)×(1−AttackerShipRamDefenseBonus)
+
+RammingDamage≥0.05×AttackerShipMaxHP
+
+
+      Enemy Surface Ship to Allied Main Fleet
+
+This is damage when a target surface ship reaches the end of the screen
+and deals damage to your Main Fleet.
+
+*Notes*:
+
+  * *CurrentEnemyHP* is a percentage, not the exact value.
+  * In this formula, *CollisionDamage* is _floored_ to the nearest whole
+    number.
+  * All scaling stats calculated in the same method as up *here
+    <#Final_Effective_Stat>*.
+
+CollisionDamage=[(EnemyFP+EnemyTRP)×2.2+EnemyLevel−ArtificialLevelDecrease2]×TotalAlliedInjureRatio×(CurrentEnemyHP%×0.7+0.3)×(1+LevelDifference200)×ThreatLevelDmgModifier
+
+
+CollisionDamage>=10. If this value goes below 10 for any reason, 10 is
+used instead.
+
+
+      Enemy Submarine to Allied Main Fleet
+
+This is damage when a target submarine reaches the end of the screen and
+deals damage to your Main Fleet.
+
+*Notes*:
+
+  * *CurrentEnemyHP* is a percentage, not the exact value.
+  * In this formula, *CollisionDamage* is _floored_ to the nearest whole
+    number.
+
+
+CollisionDamage=[EnemyTRP×3.5+EnemyLevel−ArtificialLevelDecrease2]×TotalAlliedInjureRatio×(CurrentEnemyHP%×0.5+0.5)×(1+LevelDifference200)×ThreatLevelDmgModifier
+
+
+CollisionDamage>=80. If this value goes below 80 for any reason, 80 is
+used instead.
+
+
+There is a small chance for this damage to be dealt twice. The rate for
+this to occur is listed below:
+
+
+EnemySSDMGTwiceChance=0.15×(EnemyEVAEnemyEVA+50)
+
+
+      Aircraft Crash Damage
+
+This is the damage dealt *by 1 allied plane* reaching the end of the
+screen. Allied planes launched in PvE content do not have Aircraft Crash
+Damage.
+
+
+AircraftCrashDmg=(BaseCrashDmg×AVIMultiplier+AlliedShipLevel2)×(CurrentPlaneHP%×0.7+0.3)×(1+LevelDifference200)×TotalDRB×TotalInjureRatio×TotalDRT×EnemyAAModifier
+
+/In Exercise, PlaneHP is quadrupled, see Exercise <https://
+azurlane.koumakan.jp/wiki/Exercise> for more details./
+
+
+    Slash Damage
+
+
+      Augment Modules
+
+→ Main article: Augment Module Slash Mechanics <https://
+azurlane.koumakan.jp/wiki/Augmentation#Augment_Module_Slash_Mechanics>
+
+
+      Ship Skills
+
+The general formula for Slash damage is the following:
+
+
+SlashDamage=A×AverageLevel+B
+
+
+Where AverageLevel is the average level of all ships with that slash
+type. The values of *A* and *B* depend on the attack itself.
+
+
+    Damage Over Time (DOT)
+
+These are damage sources that deal damage to the target overtime,
+without requiring any other weapons / equipment. This damage cannot be
+evaded once it is applied.
+
+*Notes*:
+
+  * DoT damage is not affected by any damage dealt / damage reduction
+    sources that do not specifically mention "Burn" or "Fire" damage.
+  * DoT damage is not added to the end-screen damage scoreboard.
+  * StatMultiplier is calculated in the same method as up here
+    <#Final_Effective_Stat>.
+
+
+      Fire / Burn Damage
+
+HE shots each have a probability of starting a fire on the target. If a
+fire is started, the ship will be damaged up to 5 times, with the first
+instance being 3 seconds after the hit. Damage formula is as follows:
+
+DamagePerTick=(WeaponBaseDamage×WeaponCoeff×SlotEfficiency×StatMultiplier×BurnCoefficient+BurnDamage)×(1+∑inBurnSkillBonusi)
+
+BurnSkillBonus refers to skills that specifically mention "Burn" /
+"Fire" damage.
+
+
+The probability of starting a fire by different types of common guns are
+as follows:
+
+Shell Type 	Probability
+DD Guns 	1%
+CL Guns 	3%
+CA Guns 	8%
+CB Guns 	4%
+Type 3 Ammo 	30%
+BB/BC/BM Guns 	50%
+
+There are exceptions to this. Refer to specific equipment pages for
+specific information.
+
+Most fires don't stack but they can be replaced or refreshed. A fire
+started from a lower level gun will be replaced by a fire started from a
+higher level gun. Level increases from DD, CL, CA/CB, to BB guns.
+Special barrages may have their own levels. For example, Lexington
+class's Artillery Cover applies a Level 1(DD) fire. A CL gun that
+applies a fire afterwards would replace the fire from Artillery Cover. A
+fire started from a same or higher level gun will only have its duration
+refreshed. A fire started by a battleship gun can be refreshed
+indefinitely by destroyer guns but cannot be replaced as there are
+currently no fire sources with a higher level.
+
+
+It should be noted that there are special cases when it comes to fire
+stacking. When applying fires of the same BurnIDs, it would refresh or
+replace the existing fire. Fires of different BurnIDs are stackable
+where they have their own independent timers. These unique fires are
+listed below alongside their properties:
+
+List of all Burns Expand Name 	Skill Name 	Coefficent 	Scaling Stat 	
+Damage 	Damage Interval (s) 	Duration 	Chance on hit 	BurnID 	Notes
+Generic Burn 		0.6 	FP 	5 	3 	15.1 	varies 	311 	
+Kirishima <https://azurlane.koumakan.jp/wiki/Kirishima> 	Blaze of Glory
+	1.5 	FP 	5 	2 	10.1 	50% 	20 	
+Saratoga <https://azurlane.koumakan.jp/wiki/Saratoga> 	Witch's Prank 	
+0.1 	AVI 	5 	3 	15.1 	100% 	317 	
+Chapayev <https://azurlane.koumakan.jp/wiki/Chapayev> 	Cavalier of the
+Ether 	0.6 	FP 	5 	2 	6.1 	100% 	325 	
+Hermes <https://azurlane.koumakan.jp/wiki/Hermes> 	Destiny Draw!
+(Blackburn Fire Blast) 	0.3 	AVI 	5 	3 	15.1 	50% 	320 	
+Tokino Sora <https://azurlane.koumakan.jp/wiki/Tokino_Sora> 	Dream☆Story
+	0.1 	AVI 	5 	3 	15.1 	1.50% 	322 	
+Albacore <https://azurlane.koumakan.jp/wiki/Albacore> 	Surpriiiiiiiise!
+(+) 	0.4 	TRP 	5 	3 	15.1 	70% 	318 	
+Twin 410mm (Type 3 Shell) <https://azurlane.koumakan.jp/wiki/
+Twin_410mm_(Type_3_Shell)> 		1.2 	FP 	5 	3 	15.1 	30% 	312 	
+Richelieu <https://azurlane.koumakan.jp/wiki/Richelieu> 	The Iris's Holy
+Flame 	0 	FP 	119 	3 	30 	70% 	329 	
+Jeanne d'Arc <https://azurlane.koumakan.jp/wiki/Jeanne_d%27Arc> 	La
+Pucelle 	0 	FP 	8 	3 	30.1 		13291 	
+Algérie <https://azurlane.koumakan.jp/wiki/Alg%C3%A9rie> 	Bellowing
+Gusts of Fire 	0 	FP 	8 	3 	10 	10% 	328 	
+Drake <https://azurlane.koumakan.jp/wiki/Drake> 	The Fearless
+Privateer(+) 	0.6 	FP 	5 	3 	15.1 	9.5% 	333 	
+Albacore µ <https://azurlane.koumakan.jp/wiki/Albacore_%C2%B5> 	
+Universal Surprise! 	0.4 	TRP 	5 	3 	15.1 	70% 	318 	
+Honoka <https://azurlane.koumakan.jp/wiki/Honoka> 	Super Mega
+Explosion(+) 	0 	FP 	119 	3 	30 	70% 	329 	
+Kirov <https://azurlane.koumakan.jp/wiki/Kirov> 	Kirov Reporting! 	0.6 	
+FP 	5 	2 	8 	100% 	346 	
+Ticonderoga <https://azurlane.koumakan.jp/wiki/Ticonderoga> 	Wings of
+Soaring Flames 	0.3 	AVI 	5 	3 	12.1 	60% 	349 	
+Souryuu META <https://azurlane.koumakan.jp/wiki/Souryuu_META> 	Akatan of
+Blossoming Flame 	0 	AVI 	521 	3 	6.1 	100% 	371 	
+Azuma <https://azurlane.koumakan.jp/wiki/Azuma> 	Special Gunnery
+Training+ 	0.6 	FP 	5 	3 	15.1 	100% 	357 	
+Gneisenau META <https://azurlane.koumakan.jp/wiki/Gneisenau_META> 	
+Seething Chains 	0 	FP 	76 	1 	6.1 	100% 	446 	
+Pompeo Magno <https://azurlane.koumakan.jp/wiki/Pompeo_Magno> 	March on
+Towards Triumph! 	0 	FP 	81 	1 	15 	100% 	394 / 395 	Burn 394 lasts as
+long as enemies are in the summon's radius, then applies one instance of
+395 upon leave
+Yuudachi <https://azurlane.koumakan.jp/wiki/Yuudachi> 	Feral Claws 	0.6
+	FP 	5 	3 	15.1 	100% 	442 	
+Indomitable <https://azurlane.koumakan.jp/wiki/Indomitable> 	One Iota of
+Effort, Two Can Play at That Game 	0.3 	AVI 	5 	3 	12.1 	100% 	455 	
+Kearsarge <https://azurlane.koumakan.jp/wiki/Kearsarge> 	Combat
+Adaptation Module 	0.5 	FP 	50 	3 	10 	100% 	19682 	
+Kearsarge <https://azurlane.koumakan.jp/wiki/Kearsarge> 	Multi-Linked
+Locking System 	0.5 	AVI 	50 	3 	10 	100% 	19663 	
+Hakuryuu <https://azurlane.koumakan.jp/wiki/Hakuryuu> 	Sky-Rending
+Retribution 	0 	FP 	255 	3 	7 	100% 	407 	Does not ignite.
+Fusou META <https://azurlane.koumakan.jp/wiki/Fusou_META> 	Cinderflame
+Curse 	0.6 	FP 	41 	1 	10.2 	100% 	441 	
+0 	FP 	100 	10 	
+Hornet II <https://azurlane.koumakan.jp/wiki/Hornet_II> 	Hornet's Sting
+	0.3 	AVI 	5 	3 	12.1 	100% 	483 	
+La Galissonnière META <https://azurlane.koumakan.jp/wiki/
+La_Galissonni%C3%A8re_META> 	Inquisition's Axe 	0.6 	FP 	5 	3 	15.1 	
+100% 	486 	
+Homura <https://azurlane.koumakan.jp/wiki/Homura> 	Blaze of Sacrifice 	
+0.6 	TRP 	5 	3 	6.1 	100% 	110071 	
+Homura <https://azurlane.koumakan.jp/wiki/Homura> 	Blaze of Sacrifice+ 	
+0.6 	TRP 	5 	3 	20.1 	100% 	110071 	
+Murasaki <https://azurlane.koumakan.jp/wiki/Murasaki> 	Root of Calamity
+Storm+ 	0 	FP 	105 	1 	20.1 	100% 	110071 	Does not ignite.
+Algérie META <https://azurlane.koumakan.jp/wiki/Alg%C3%A9rie_META> 	
+Expurgating Flame, Cinders of Hope - Algérie 	0 	FP 	186 	1.5 	8 	100% 	
+800871 	
+Princeton META <https://azurlane.koumakan.jp/wiki/Princeton_META> 	
+Phosphorous Flames 	0.35 	AVI 	5 	3 	10 	70% 	800964 	
+Algérie <https://azurlane.koumakan.jp/wiki/Alg%C3%A9rie> 	Bellowing
+Gusts of Fire+ 	0.5 	FP 	8 	3 	10 	100% 	1013272 	
+Alsace <https://azurlane.koumakan.jp/wiki/Alsace> 	Attack Command: Holy
+Judgment 	0 	FP 	119 	3 	30 	100% 	150028 	
+Alvitr <https://azurlane.koumakan.jp/wiki/Alvitr> 	Muspel-Piercing Spear
+	0 	FP 	150 	1 	5.1 	100% 	150143 	
+150144 	
+Noshiro µ <https://azurlane.koumakan.jp/wiki/Noshiro_%C2%B5> 	Resonant
+Fortissimo 	0.6 	TRP 	5 	3 	9.1 	70% 	17858 	
+Daisen <https://azurlane.koumakan.jp/wiki/Daisen> 	Causality Anchor 	0 	
+FP 	410 	3 	15.1 	100% 	19869 	
+
+
+      Flood Damage
+
+Several skills can cause flood. Flood damage is caused every 3 seconds,
+the first instance at 3 seconds after the effect is inflicted. Multiple
+sources of floods can affect a single target at the same time, and will
+not interfere with each other, nor with other DoT effects (ex. Burn
+Damage <#Fire_/_Burn_Damage>).
+
+DamagePerTick=(WeaponBaseDamage×WeaponCoeff×SlotEfficiency×StatMultiplier×FloodCoefficient+FloodDamage)×(1+∑inFloodSkillBonusi)
+
+
+In the table below, ScalingStat is the stat that the DoT scales off of.
+
+  * For example, U-81 would inflict flood damage based on Torpedo stat
+    while Saratoga inflicts damage based on Aviation stat.
+
+
+List of all Floods Collapse Name 	Skill Name 	Coefficent 	Scaling Stat 	
+Damage 	Damage Interval (s) 	Duration (s) 	Chance on hit 	FloodID
+Essex <https://azurlane.koumakan.jp/wiki/Essex> 	Valorous Avengers 	0.3
+	AVI 	10 	3 	15.1 	100% 	319
+Formidable <https://azurlane.koumakan.jp/wiki/Formidable> 	Supporting
+Wings 	0.2 	AVI 	10 	3 	9.1 	80% 	321
+Saratoga <https://azurlane.koumakan.jp/wiki/Saratoga> 	Witch's Prank 	
+0.2 	AVI 	10 	3 	15.1 	100% 	316
+U-81 <https://azurlane.koumakan.jp/wiki/U-81> 	Silent Hunter 	0.45 	TRP
+	10 	3 	24.1 	15% 	313
+Sovetskaya Rossiya <https://azurlane.koumakan.jp/wiki/
+Sovetskaya_Rossiya> 	Lod Obstrel 	0 	AVI 	23 	3.5 	4 	100% 	323
+Sovetskaya Belorussiya <https://azurlane.koumakan.jp/wiki/
+Sovetskaya_Belorussiya> 	Curtain of Rime 	0 	AVI 	23 	3.5 	4 	100% 	323
+TBM Avenger (VT-18 Squadron) <https://azurlane.koumakan.jp/wiki/
+TBM_Avenger_(VT-18_Squadron)> 		0.15 	AVI 	10 	3 	9.1 	60% 	326
+Souryuu META <https://azurlane.koumakan.jp/wiki/Souryuu_META> 	Aotan of
+Shadow-Sealing 	0.3 	AVI 	5 	3 	9.1 	100% 	372
+Shimakaze <https://azurlane.koumakan.jp/wiki/Shimakaze> 	Upon the Wind's
+Edge 	0 	AVI 	179 	3 	6 	100% 	14853
+Shimakaze <https://azurlane.koumakan.jp/wiki/Shimakaze> 	Within the
+Thunder's Roar 	0 	AVI 	179 	3 	6 	100% 	14853
+Volga <https://azurlane.koumakan.jp/wiki/Volga> 	Meteoric Hope 	0.3 	AVI
+	10 	3 	12.1 	100% 	449
+Leonardo da Vinci <https://azurlane.koumakan.jp/wiki/Leonardo_da_Vinci>
+	Get 'Em, Canguro! 	0.45 	TRP 	5 	3 	24.1 	100% 	524
+Shimanto <https://azurlane.koumakan.jp/wiki/Shimanto> 	Torrential Wrath
+	0 	AVI 	150 	3 	6 	100% 	19759
+São Martinho <https://azurlane.koumakan.jp/wiki/S%C3%A3o_Martinho> 	
+Peerless Cannons of Destruction+ 	0.3 	FP 	18 	3 	18.1 	10% 	1017203
+U-31 <https://azurlane.koumakan.jp/wiki/U-31> 	Danger from Below! 	0.4 	
+TRP 	5 	3 	18.1 	100% 	150209
+Fei Yuen <https://azurlane.koumakan.jp/wiki/Fei_Yuen> 	Lady Yuen's Great
+"Adventure" 	0 	AVI 	100 	2 	8.1 	Complicated 	17488
+
+It should also be noted that DoT effect damage is not counted on the
+end-of-battle damage scoreboard. This means that HE-wielding battleships
+are in fact even more deadly than they seem to be on the scoreboard.
+
+
+    Weapon Accuracy
+
+
+      Geometric Accuracy
+
+This is the weapon's ability to hit the target *geometrically*. Most
+weapons will miss part of their output due to missing the target
+outright. Potential reasons include (but are not limited to):
+
+  * Self and/or Enemy ships movement patterns.
+  * The weapon's launch pattern.
+  * Enemy shields blocking the attack.
+
+
+      Hit Rate
+
+When a shell/torpedo/bomb *hits a ship geometrically*, there is a chance
+that it will be counted as a miss and the projectile won't deal any
+damage. HitRate is mainly determined by three factors:
+
+  * The Accuracy Accuracy (Hit) Stat of the shooter.
+  * The Evasion Evasion stat of the target.
+  * The Luck Luck stat of both ships.
+
+Scaling stats are calculated in the same method as up here
+<#Final_Effective_Stat>.
+
+HitRate=0.1+AttackerHitAttackerHit+TargetEvasion+2+AttackerLuck−TargetLuck+LevelDifference1000+AccuracyVsShipTypeSkill−EvasionRateSkill
+
+*Notes:*
+
+  * 0.1<=HitRate<=1.0 . If Evasion Evasion or skills cause the HitRate
+    to be below 0.1, then 0.1 is used instead.
+  * Evasion EvasionRateSkill are ship skills that directly affect
+    Evasion Evasion Rate, such as Smokescreens or Aurora's <https://
+    azurlane.koumakan.jp/wiki/Aurora> *The Light of Dawn*.
+  * AccuracyVsShipTypeSkill are any ship skills that affect Accuracy
+    against a specific hull type, such as Warspite (Retrofit) <https://
+    azurlane.koumakan.jp/wiki/Warspite>'s *The Royal Navy Legend*.
+
+
+      Effective HP
+
+*eHP* stands for Effective Health Pool. It calculates a ship's health
+when accounting for enemy accuracy and any damage dealt / resistance
+values. For example, if there is a ship that can dodge 50% of the time
+and has 2000 HP, another ship that dodges 0% of the time and has 4000 HP
+will have the same survivability on average. As always, scaling stats
+are calculated in the same method as up here <#Final_Effective_Stat>.
+
+
+A very simplified eHP formula for an Attacking ship can be derived as
+follows:
+
+eHP=[AttackerHPTargetAccuracy×1∏i=1n(1+AttackerDMGResistancei)]
+
+
+Where AttackerDMGResistance are *negative decimal values* derived from
+any damage resistance buffs on the Attacker. This formula gets more
+complex the more modifiers you start accounting for, and different
+people have different approaches on how to account for everything, hence
+why it is not listed on the wiki currently.
+
+Retrieved from "https://azurlane.koumakan.jp/w/index.php?
+title=Damage_Calculations&oldid=271273 <https://azurlane.koumakan.jp/w/
+index.php?title=Damage_Calculations&oldid=271273>"
+Category <https://azurlane.koumakan.jp/wiki/Special:Categories>:
+
+  * Gameplay <https://azurlane.koumakan.jp/wiki/Category:Gameplay>
+
+
+    Navigation menu
+
+
+Personal tools
+
+  * Log in <https://azurlane.koumakan.jp/w/index.php?
+    title=Special:UserLogin&returnto=Damage+Calculations>
+
+
+Namespaces
+
+  * Page <https://azurlane.koumakan.jp/wiki/Damage_Calculations>
+  * Discussion <https://azurlane.koumakan.jp/w/index.php?
+    title=Talk:Damage_Calculations&action=edit&redlink=1>
+
+British English
+
+
+Views
+
+  * Read <https://azurlane.koumakan.jp/wiki/Damage_Calculations>
+  * View source <https://azurlane.koumakan.jp/w/index.php?
+    title=Damage_Calculations&action=edit>
+  * View history <https://azurlane.koumakan.jp/w/index.php?
+    title=Damage_Calculations&action=history>
+
+More
+
+  * Purge cache <https://azurlane.koumakan.jp/w/index.php?
+    title=Damage_Calculations&action=purge>
+
+
+      Search
+
+<https://azurlane.koumakan.jp/wiki/Azur_Lane_Wiki>
+
+
+Navigation
+
+  * Main page <https://azurlane.koumakan.jp/wiki/Azur_Lane_Wiki>
+  * Recent changes <https://azurlane.koumakan.jp/wiki/Special:RecentChanges>
+  * Recent uploads <https://azurlane.koumakan.jp/wiki/Special:NewFiles>
+  * Random page <https://azurlane.koumakan.jp/wiki/Special:Random>
+  * To do <https://azurlane.koumakan.jp/wiki/To_Do>
+  * Help <https://www.mediawiki.org/wiki/Special:MyLanguage/Help:Contents>
+
+
+      Patch Notes
+
+  * Patch notes <https://azurlane.koumakan.jp/wiki/Recent_News>
+
+
+      Beginner Resources
+
+  * Registration guide <https://azurlane.koumakan.jp/wiki/
+    Bilibili_Registration>
+  * Start-up guide <https://azurlane.koumakan.jp/wiki/Getting_Started>
+  * FAQ <https://azurlane.koumakan.jp/wiki/FAQ>
+
+
+      Gameplay Resources
+
+  * Academy <https://azurlane.koumakan.jp/wiki/Academy>
+  * Dorm <https://azurlane.koumakan.jp/wiki/Living_Area#Dorm>
+  * Campaign <https://azurlane.koumakan.jp/wiki/Campaign>
+  * Construction <https://azurlane.koumakan.jp/wiki/Building>
+  * Dockyard <https://azurlane.koumakan.jp/wiki/Dockyard>
+  * Events <https://azurlane.koumakan.jp/wiki/Events>
+  * Missions <https://azurlane.koumakan.jp/wiki/Missions>
+  * Research <https://azurlane.koumakan.jp/wiki/Research>
+
+
+      Fleet Information
+
+  * List of ships <https://azurlane.koumakan.jp/wiki/List_of_Ships>
+  * Graphical ship list <https://azurlane.koumakan.jp/wiki/
+    List_of_Ships_by_Image>
+  * Ship list by class <https://azurlane.koumakan.jp/wiki/
+    List_of_Ships_by_Class>
+  * Equipment list <https://azurlane.koumakan.jp/wiki/Equipment_List>
+
+
+      Tools
+
+  * What links here <https://azurlane.koumakan.jp/wiki/
+    Special:WhatLinksHere/Damage_Calculations>
+  * Related changes <https://azurlane.koumakan.jp/wiki/
+    Special:RecentChangesLinked/Damage_Calculations>
+  * Upload file <https://azurlane.koumakan.jp/wiki/Special:BatchUpload>
+  * Special pages <https://azurlane.koumakan.jp/wiki/Special:SpecialPages>
+  * Printable version <javascript:print();>
+  * Permanent link <https://azurlane.koumakan.jp/w/index.php?
+    title=Damage_Calculations&oldid=271273>
+  * Page information <https://azurlane.koumakan.jp/w/index.php?
+    title=Damage_Calculations&action=info>
+  * Cargo data <https://azurlane.koumakan.jp/w/index.php?
+    title=Damage_Calculations&action=pagevalues>
+  * Expand all <#>
+
+  * This page was last modified on 26 March 2025, at 19:10.
+  * Content is available under Creative Commons Attribution-
+    NonCommercial-ShareAlike <https://creativecommons.org/licenses/by-
+    nc-sa/4.0/> unless otherwise noted.
+
+  * Privacy policy <https://azurlane.koumakan.jp/wiki/
+    Azurlane:Privacy_policy>
+  * About Azur Lane Wiki <https://azurlane.koumakan.jp/wiki/Azurlane:About>
+  * Disclaimers <https://azurlane.koumakan.jp/wiki/
+    Azurlane:General_disclaimer>
+  * Mobile view <https://azurlane.koumakan.jp/w/index.php?
+    title=Damage_Calculations&mobileaction=toggle_view_mobile>
+
+  * Creative Commons Attribution-NonCommercial-ShareAlike <https://
+    creativecommons.org/licenses/by-nc-sa/4.0/>
+  * Powered by MediaWiki <https://www.mediawiki.org/>
+

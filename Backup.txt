@@ -1,0 +1,126 @@
+# Predictive Maintenance for Industrial Equipment
+
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import classification_report, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+import datetime
+
+from google.colab import files
+uploaded = files.upload()
+
+# Load dataset (example file)
+data = pd.read_csv('predictive_maintenance_dataset.csv')
+
+# Preview the data
+print("\nSample data:")
+print(data.head())
+
+# Drop non-numeric or irrelevant columns
+data.drop(['device'], axis=1, inplace=True)
+
+# Rename metric columns to meaningful names
+data.rename(columns={
+    'metric1': 'operation_cycles',
+    'metric2': 'vibration',
+    'metric3': 'error_count',
+    'metric4': 'motor_temp',
+    'metric5': 'lubricant_level',
+    'metric6': 'load',
+    'metric7': 'warning_flag',
+    'metric8': 'recent_repairs',
+    'metric9': 'motor_current'
+}, inplace=True)
+
+# Convert date to datetime format
+data['date'] = pd.to_datetime(data['date'], format='%m/%d/%Y')
+
+# ------------------- Data Cleaning -------------------
+
+# Remove duplicates
+initial_shape = data.shape
+data.drop_duplicates(inplace=True)
+print(f"\nRemoved {initial_shape[0] - data.shape[0]} duplicate rows.")
+
+# Handle missing values (if any)
+missing_summary = data.isnull().sum()
+print("\nMissing values per column:")
+print(missing_summary[missing_summary > 0])
+
+# Fill missing values with column mean (can be changed as needed)
+data.fillna(data.mean(numeric_only=True), inplace=True)
+
+# Ensure no NaN values remain
+assert data.isnull().sum().sum() == 0, "There are still missing values after cleaning."
+
+# ------------------------------------------------------
+
+# Split data into features and labels
+X = data.drop(['failure', 'date'], axis=1)
+y = data['failure']
+
+# Save date for mapping predictions later
+dates = data['date']
+
+# Split into training and testing sets
+X_train, X_test, y_train, y_test, dates_train, dates_test = train_test_split(
+    X, y, dates, test_size=0.2, random_state=42)
+
+# Standardize the data
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+# Train model
+model = RandomForestClassifier(n_estimators=100, random_state=42)
+model.fit(X_train_scaled, y_train)
+
+# Predict and evaluate
+predictions = model.predict(X_test_scaled)
+print("\nConfusion Matrix:")
+print(confusion_matrix(y_test, predictions))
+print("\nClassification Report:")
+print(classification_report(y_test, predictions))
+
+# Predict upcoming failures
+upcoming_failures = dates_test[predictions == 1]
+print("\nPredicted maintenance needed on the following dates:")
+print(upcoming_failures.sort_values().unique())
+
+# Feature importance plot
+importances = model.feature_importances_
+features = X.columns
+indices = np.argsort(importances)[::-1]
+
+plt.figure(figsize=(12, 6))
+sns.barplot(x=importances[indices], y=features[indices])
+plt.title('Feature Importances')
+plt.tight_layout()
+plt.show()
+
+# --- User Input for Practical Use ---
+
+def user_input_prediction():
+    print("\nEnter sensor readings to predict failure:")
+    input_data = {}
+    for col in X.columns:
+        value = float(input(f"{col}: "))
+        input_data[col] = value
+
+    input_df = pd.DataFrame([input_data])
+    input_scaled = scaler.transform(input_df)
+    result = model.predict(input_scaled)
+    probability = model.predict_proba(input_scaled)[0][1]
+
+    print("\nPrediction result:")
+    if result[0] == 1:
+        print(f"⚠️ Maintenance is likely required. (Probability: {probability:.2f})")
+    else:
+        print(f"✅ Equipment is operating normally. (Probability: {probability:.2f})")
+
+# Run user input prediction (uncomment to use interactively)
+user_input_prediction()
